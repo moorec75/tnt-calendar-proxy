@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "functions": {
-    "api/calendar.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
-}
