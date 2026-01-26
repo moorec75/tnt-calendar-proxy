@@ -2,7 +2,7 @@ module.exports = async (req, res) => {
   // Content type for HTML
   res.setHeader("Content-Type", "text/html; charset=utf-8");
 
-  // Allow embedding in an iframe (Wix). If you ever want to restrict by domain, we can tighten this.
+  // Allow embedding in an iframe (Wix)
   res.setHeader("X-Frame-Options", "ALLOWALL");
 
   const html = `<!doctype html>
@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
         background: #ffffff !important;
       }
 
-      /* Event styling */
+      /* Default event styling (ED) */
       .fc-daygrid-event {
         background-color: #FFADFF !important;
         border: 1px solid #e08be0 !important;
@@ -89,7 +89,25 @@ module.exports = async (req, res) => {
                 right: "dayGridMonth"
               },
 
-              events: events.map(e => ({ ...e, allDay: true }))
+              events: events.map(e => {
+                const title = (e.title || "").trim();
+
+                // Option 3: Title parsing for IP
+                // - Matches "IP ..." at the start
+                // - Or standalone "IP" anywhere in the title
+                const isIP =
+                  /^IP\\b/i.test(title) ||
+                  /\\bIP\\b/i.test(title);
+
+                return {
+                  ...e,
+                  allDay: true,
+
+                  // Default (ED) uses CSS.
+                  // Override only for IP:
+                  ...(isIP ? { backgroundColor: "#AFACFB" } : {})
+                };
+              })
             }
           );
 
