@@ -1,8 +1,5 @@
 module.exports = async (req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-
-  // Optional: allow embedding anywhere (Wix uses an iframe)
-  // If you later want to restrict this to only your Wix domain, tell me and we’ll lock it down.
   res.setHeader("X-Frame-Options", "ALLOWALL");
 
   res.status(200).send(`<!doctype html>
@@ -16,33 +13,69 @@ module.exports = async (req, res) => {
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
     <style>
-      body { margin: 0; padding: 12px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-      #status { margin-bottom: 8px; }
-      #calendar { max-width: 1100px; margin: 0 auto; }
+      /* ---- GLOBAL BACKGROUND ---- */
+      html, body {
+        background: #ffffff;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      }
+
+      #calendar {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #ffffff;
+      }
+
+      /* ---- CALENDAR GRID BACKGROUND ---- */
+      .fc,
+      .fc-view-harness,
+      .fc-scrollgrid,
+      .fc-scrollgrid-section-body,
+      .fc-daygrid-body,
+      .fc-daygrid {
+        background: #ffffff !important;
+      }
+
+      /* ---- EVENT STYLING ---- */
+      .fc-daygrid-event {
+        background-color: #FFEBFF !important;
+        border: 1px solid #e0bfe0 !important;
+        color: #000000 !important;
+        border-radius: 6px;
+        padding: 2px 4px;
+      }
+
+      /* ---- REMOVE TIME TEXT ---- */
+      .fc-event-time {
+        display: none !important;
+      }
+
+      /* ---- "+ MORE" LINK CLEANUP ---- */
+      .fc-daygrid-more-link {
+        color: #555;
+        font-weight: 500;
+      }
     </style>
   </head>
+
   <body>
-    <div id="status">Loading schedule…</div>
     <div id="calendar"></div>
 
     <script>
       (async function () {
-        const statusEl = document.getElementById("status");
-
         try {
           const res = await fetch("/api/calendar", { cache: "no-store" });
           if (!res.ok) throw new Error("HTTP " + res.status);
           const events = await res.json();
 
-          statusEl.textContent = "Loaded " + events.length + " events";
-
           const calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
             initialView: "dayGridMonth",
             height: "auto",
             fixedWeekCount: false,
-            nowIndicator: true,
+            nowIndicator: false,
 
-            // ✅ your requirement
+            /* ---- YOUR RULE ---- */
             dayMaxEventRows: 4,
             eventDisplay: "block",
 
@@ -52,12 +85,17 @@ module.exports = async (req, res) => {
               right: "dayGridMonth,timeGridWeek,listWeek"
             },
 
-            events
+            /* ---- FORCE ALL-DAY DISPLAY ---- */
+            events: events.map(e => ({
+              ...e,
+              allDay: true
+            }))
           });
 
           calendar.render();
         } catch (e) {
-          statusEl.textContent = "ERROR loading calendar: " + (e && e.message ? e.message : e);
+          document.body.innerHTML =
+            "<div style='padding:12px;font-family:system-ui;color:red'>ERROR loading calendar</div>";
         }
       })();
     </script>
