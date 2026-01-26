@@ -4,138 +4,132 @@ module.exports = async (req, res) => {
 
   const html = `<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>TNT Schedule</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TNT Schedule</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      }
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
 
-      #calendar {
-        max-width: 1100px;
-        margin: 0 auto;
-        background: #ffffff;
-        padding: 12px;
-      }
+    #calendar {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 12px;
+    }
 
-      .fc,
-      .fc-view-harness,
-      .fc-scrollgrid,
-      .fc-scrollgrid-section,
-      .fc-scrollgrid-section-body,
-      .fc-daygrid-body,
-      .fc-daygrid,
-      .fc-daygrid-day-frame {
-        background: #ffffff !important;
-      }
+    .fc,
+    .fc-view-harness,
+    .fc-scrollgrid,
+    .fc-scrollgrid-section,
+    .fc-scrollgrid-section-body,
+    .fc-daygrid-body,
+    .fc-daygrid,
+    .fc-daygrid-day-frame {
+      background: #ffffff !important;
+    }
 
-      /* Default event styling = ED */
-      .fc-daygrid-event {
-        background-color: #FFADFF !important;
-        border: 1px solid #e08be0 !important;
-        color: #4B0D3A !important;
-        border-radius: 6px;
-        padding: 2px 6px;
-        font-weight: 500;
-      }
-      .fc-event-title { color: #4B0D3A !important; }
+    /* ===== DEFAULT = ED ===== */
+    .fc-daygrid-event {
+      background-color: #FFADFF !important;
+      border: 1px solid #e08be0 !important;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-weight: 500;
+    }
+    .fc-daygrid-event .fc-event-title {
+      color: #4B0D3A !important;
+    }
 
-      /* Hide time */
-      .fc-event-time { display: none !important; }
+    /* ===== IP ===== */
+    .fc-daygrid-event.ip {
+      background-color: #AFACFB !important;
+      border-color: #8E8AE6 !important;
+    }
+    .fc-daygrid-event.ip .fc-event-title {
+      color: #4B0D3A !important;
+    }
 
-      .fc-daygrid-more-link {
-        color: #555;
-        font-weight: 500;
-      }
-    </style>
-  </head>
+    /* ===== OTHER (red + white) ===== */
+    .fc-daygrid-event.other {
+      background-color: #D11A2A !important;
+      border-color: #B01522 !important;
+    }
+    .fc-daygrid-event.other .fc-event-title {
+      color: #FFFFFF !important;
+    }
 
-  <body>
-    <div id="calendar"></div>
+    /* Hide time */
+    .fc-event-time {
+      display: none !important;
+    }
 
-    <script>
-      (async function () {
-        try {
-          const res = await fetch("/api/calendar", { cache: "no-store" });
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const events = await res.json();
+    .fc-daygrid-more-link {
+      color: #555;
+      font-weight: 500;
+    }
+  </style>
+</head>
 
-          function classify(titleRaw) {
-            const title = (titleRaw || "").trim();
+<body>
+  <div id="calendar"></div>
 
-            // Match whole-word ED/IP (avoids "Med" triggering ED, etc.)
-            const isED = /\\bED\\b/i.test(title);
-            const isIP = /\\bIP\\b/i.test(title);
+  <script>
+    (async function () {
+      try {
+        const res = await fetch("/api/calendar", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const events = await res.json();
 
-            if (isED) return "ED";
-            if (isIP) return "IP";
-            return "OTHER";
-          }
-
-          const calendar = new FullCalendar.Calendar(
-            document.getElementById("calendar"),
-            {
-              initialView: "dayGridMonth",
-              height: "auto",
-              fixedWeekCount: false,
-              nowIndicator: false,
-
-              dayMaxEventRows: 4,
-              eventDisplay: "block",
-
-              headerToolbar: {
-                left: "prev,next today",
-                center: "title",
-                right: "dayGridMonth"
-              },
-
-              events: events.map(e => {
-                const bucket = classify(e.title);
-
-                // Default ED uses CSS; we only override when needed.
-                if (bucket === "IP") {
-                  return {
-                    ...e,
-                    allDay: true,
-                    backgroundColor: "#AFACFB",
-                    borderColor: "#8E8AE6",
-                    textColor: "#4B0D3A"
-                  };
-                }
-
-                if (bucket === "OTHER") {
-                  return {
-                    ...e,
-                    allDay: true,
-                    backgroundColor: "#D11A2A",
-                    borderColor: "#B01522",
-                    textColor: "#FFFFFF"
-                  };
-                }
-
-                // ED (default)
-                return { ...e, allDay: true };
-              })
-            }
-          );
-
-          calendar.render();
-        } catch (err) {
-          document.body.innerHTML =
-            "<div style='padding:12px;color:red;font-family:system-ui'>ERROR loading calendar</div>";
+        function classify(titleRaw) {
+          const title = (titleRaw || "").trim();
+          if (/\\bED\\b/i.test(title)) return "ed";
+          if (/\\bIP\\b/i.test(title)) return "ip";
+          return "other";
         }
-      })();
-    </script>
-  </body>
+
+        const calendar = new FullCalendar.Calendar(
+          document.getElementById("calendar"),
+          {
+            initialView: "dayGridMonth",
+            height: "auto",
+            fixedWeekCount: false,
+            nowIndicator: false,
+
+            dayMaxEventRows: 4,
+            eventDisplay: "block",
+
+            headerToolbar: {
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth"
+            },
+
+            events: events.map(e => ({
+              ...e,
+              allDay: true,
+              classNames: [classify(e.title)]
+            }))
+          }
+        );
+
+        calendar.render();
+      } catch (err) {
+        document.body.innerHTML =
+          "<div style='padding:12px;color:red;font-family:system-ui'>ERROR loading calendar</div>";
+      }
+    })();
+  </script>
+</body>
 </html>`;
 
   res.statusCode = 200;
