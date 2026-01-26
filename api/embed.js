@@ -93,11 +93,14 @@ module.exports = async (req, res) => {
         function classify(titleRaw) {
   const title = (titleRaw || "").trim();
 
-  if (/^ED\b/i.test(title)) return "ed";
-  if (/^IP\b/i.test(title)) return "ip";
+  // Take the first two LETTERS after stripping any leading non-letters (emoji, [, (, etc.)
+  const prefix = title.replace(/^[^A-Za-z]+/, "").slice(0, 2).toUpperCase();
 
+  if (prefix === "ED") return "ed";
+  if (prefix === "IP") return "ip";
   return "other";
 }
+
 
 
         const calendar = new FullCalendar.Calendar(
