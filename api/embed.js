@@ -1,8 +1,5 @@
 module.exports = async (req, res) => {
-  // Content type for HTML
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-
-  // Allow embedding in an iframe (Wix)
   res.setHeader("X-Frame-Options", "ALLOWALL");
 
   const html = `<!doctype html>
@@ -41,7 +38,7 @@ module.exports = async (req, res) => {
         background: #ffffff !important;
       }
 
-      /* Default event styling (ED) */
+      /* Default event styling = ED */
       .fc-daygrid-event {
         background-color: #FFADFF !important;
         border: 1px solid #e08be0 !important;
@@ -72,6 +69,18 @@ module.exports = async (req, res) => {
           if (!res.ok) throw new Error("HTTP " + res.status);
           const events = await res.json();
 
+          function classify(titleRaw) {
+            const title = (titleRaw || "").trim();
+
+            // Match whole-word ED/IP (avoids "Med" triggering ED, etc.)
+            const isED = /\\bED\\b/i.test(title);
+            const isIP = /\\bIP\\b/i.test(title);
+
+            if (isED) return "ED";
+            if (isIP) return "IP";
+            return "OTHER";
+          }
+
           const calendar = new FullCalendar.Calendar(
             document.getElementById("calendar"),
             {
@@ -90,23 +99,31 @@ module.exports = async (req, res) => {
               },
 
               events: events.map(e => {
-                const title = (e.title || "").trim();
+                const bucket = classify(e.title);
 
-                // Option 3: Title parsing for IP
-                // - Matches "IP ..." at the start
-                // - Or standalone "IP" anywhere in the title
-                const isIP =
-                  /^IP\\b/i.test(title) ||
-                  /\\bIP\\b/i.test(title);
+                // Default ED uses CSS; we only override when needed.
+                if (bucket === "IP") {
+                  return {
+                    ...e,
+                    allDay: true,
+                    backgroundColor: "#AFACFB",
+                    borderColor: "#8E8AE6",
+                    textColor: "#4B0D3A"
+                  };
+                }
 
-                return {
-                  ...e,
-                  allDay: true,
+                if (bucket === "OTHER") {
+                  return {
+                    ...e,
+                    allDay: true,
+                    backgroundColor: "#D11A2A",
+                    borderColor: "#B01522",
+                    textColor: "#FFFFFF"
+                  };
+                }
 
-                  // Default (ED) uses CSS.
-                  // Override only for IP:
-                  ...(isIP ? { backgroundColor: "#AFACFB" } : {})
-                };
+                // ED (default)
+                return { ...e, allDay: true };
               })
             }
           );
