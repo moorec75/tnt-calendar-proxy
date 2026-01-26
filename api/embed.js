@@ -91,11 +91,14 @@ module.exports = async (req, res) => {
         const events = await res.json();
 
         function classify(titleRaw) {
-          const title = (titleRaw || "").trim();
-          if (/\\bED\\b/i.test(title)) return "ed";
-          if (/\\bIP\\b/i.test(title)) return "ip";
-          return "other";
-        }
+  const title = (titleRaw || "").trim();
+
+  if (/^ED\b/i.test(title)) return "ed";
+  if (/^IP\b/i.test(title)) return "ip";
+
+  return "other";
+}
+
 
         const calendar = new FullCalendar.Calendar(
           document.getElementById("calendar"),
