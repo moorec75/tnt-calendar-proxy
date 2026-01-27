@@ -114,6 +114,9 @@ module.exports = async (req, res) => {
             dayMaxEventRows: 4,
             eventDisplay: "block",
 
+	    eventOrder: "tntOrder,title",
+
+
             headerToolbar: {
               left: "prev,next today",
               center: "title",
@@ -134,6 +137,22 @@ module.exports = async (req, res) => {
     d.setDate(d.getDate() + 1);
     endDate = d.toISOString().slice(0, 10);
   }
+
+  const bucket = classify(e.title); // "ed" | "ip" | "other"
+
+  // Lower number = shows first (on top)
+  const tntOrder = bucket === "ip" ? 0 : bucket === "ed" ? 1 : 2;
+
+  return {
+    ...e,
+    allDay: true,
+    start: startDate || e.start,
+    end: endDate || e.end,
+    classNames: [bucket],
+    tntOrder
+  };
+})
+
 
   return {
     ...e,
