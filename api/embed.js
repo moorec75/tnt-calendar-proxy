@@ -120,11 +120,30 @@ module.exports = async (req, res) => {
               right: "dayGridMonth"
             },
 
-            events: events.map(e => ({
-              ...e,
-              allDay: true,
-              classNames: [classify(e.title)]
-            }))
+            events: events.map(e => {
+  // Convert to date-only strings to prevent timezone day-shift
+  const startStr = typeof e.start === "string" ? e.start : "";
+  const endStr = typeof e.end === "string" ? e.end : "";
+
+  const startDate = startStr ? startStr.slice(0, 10) : null; // "YYYY-MM-DD"
+  let endDate = endStr ? endStr.slice(0, 10) : null;
+
+  // FullCalendar all-day end is exclusive. If end is missing or same-day, bump by 1 day.
+  if (startDate && (!endDate || endDate === startDate)) {
+    const d = new Date(startDate + "T00:00:00");
+    d.setDate(d.getDate() + 1);
+    endDate = d.toISOString().slice(0, 10);
+  }
+
+  return {
+    ...e,
+    allDay: true,
+    start: startDate || e.start,
+    end: endDate || e.end,
+    classNames: [classify(e.title)]
+  };
+})
+
           }
         );
 
