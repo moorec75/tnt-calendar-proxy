@@ -82,97 +82,82 @@ module.exports = async (req, res) => {
 
 <body>
   <div id="calendar"></div>
+<script>
+  (async function () {
+    try {
+      const res = await fetch("/api/calendar", { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const events = await res.json();
 
-  <script>
-    (async function () {
-      try {
-        const res = await fetch("/api/calendar", { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const events = await res.json();
+      function classify(titleRaw) {
+        const title = (titleRaw || "").trim();
 
-        function classify(titleRaw) {
-  const title = (titleRaw || "").trim();
+        // Take the first two LETTERS after stripping any leading non-letters (emoji, [, (, etc.)
+        const prefix = title.replace(/^[^A-Za-z]+/, "").slice(0, 2).toUpperCase();
 
-  // Take the first two LETTERS after stripping any leading non-letters (emoji, [, (, etc.)
-  const prefix = title.replace(/^[^A-Za-z]+/, "").slice(0, 2).toUpperCase();
-
-  if (prefix === "ED") return "ed";
-  if (prefix === "IP") return "ip";
-  return "other";
-}
-
-
-
-        const calendar = new FullCalendar.Calendar(
-          document.getElementById("calendar"),
-          {
-            initialView: "dayGridMonth",
-            height: "auto",
-            fixedWeekCount: false,
-            nowIndicator: false,
-
-            dayMaxEventRows: 4,
-            eventDisplay: "block",
-
-	    eventOrder: "tntOrder,title",
-
-
-            headerToolbar: {
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth"
-            },
-
-            events: events.map(e => {
-  // Convert to date-only strings to prevent timezone day-shift
-  const startStr = typeof e.start === "string" ? e.start : "";
-  const endStr = typeof e.end === "string" ? e.end : "";
-
-  const startDate = startStr ? startStr.slice(0, 10) : null; // "YYYY-MM-DD"
-  let endDate = endStr ? endStr.slice(0, 10) : null;
-
-  // FullCalendar all-day end is exclusive. If end is missing or same-day, bump by 1 day.
-  if (startDate && (!endDate || endDate === startDate)) {
-    const d = new Date(startDate + "T00:00:00");
-    d.setDate(d.getDate() + 1);
-    endDate = d.toISOString().slice(0, 10);
-  }
-
-  const bucket = classify(e.title); // "ed" | "ip" | "other"
-
-  // Lower number = shows first (on top)
-  const tntOrder = bucket === "ip" ? 0 : bucket === "ed" ? 1 : 2;
-
-  return {
-    ...e,
-    allDay: true,
-    start: startDate || e.start,
-    end: endDate || e.end,
-    classNames: [bucket],
-    tntOrder
-  };
-})
-
-
-  return {
-    ...e,
-    allDay: true,
-    start: startDate || e.start,
-    end: endDate || e.end,
-    classNames: [classify(e.title)]
-  };
-})
-
-          }
-        );
-
-        calendar.render();
-      } catch (err) {
-        document.body.innerHTML =
-          "<div style='padding:12px;color:red;font-family:system-ui'>ERROR loading calendar</div>";
+        if (prefix === "ED") return "ed";
+        if (prefix === "IP") return "ip";
+        return "other";
       }
-    })();
-  </script>
+
+      const calendar = new FullCalendar.Calendar(
+        document.getElementById("calendar"),
+        {
+          initialView: "dayGridMonth",
+          height: "auto",
+          fixedWeekCount: false,
+          nowIndicator: false,
+
+          dayMaxEventRows: 4,
+          eventDisplay: "block",
+
+          // IP on top (lowest number sorts first)
+          eventOrder: "tntOrder,title",
+
+          headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth"
+          },
+
+          events: events.map(e => {
+            // Convert to date-only strings to prevent timezone day-shift
+            const startStr = typeof e.start === "string" ? e.start : "";
+            const endStr = typeof e.end === "string" ? e.end : "";
+
+            const startDate = startStr ? startStr.slice(0, 10) : null; // "YYYY-MM-DD"
+            let endDate = endStr ? endStr.slice(0, 10) : null;
+
+            // FullCalendar all-day end is exclusive. If end is missing or same-day, bump by 1 day.
+            if (startDate && (!endDate || endDate === startDate)) {
+              const d = new Date(startDate + "T00:00:00");
+              d.setDate(d.getDate() + 1);
+              endDate = d.toISOString().slice(0, 10);
+            }
+
+            const bucket = classify(e.title); // "ed" | "ip" | "other"
+            const tntOrder = bucket === "ip" ? 0 : bucket === "ed" ? 1 : 2;
+
+            return {
+              ...e,
+              allDay: true,
+              start: startDate || e.start,
+              end: endDate || e.end,
+              classNames: [bucket],
+              tntOrder
+            };
+          })
+        }
+      );
+
+      calendar.render();
+    } catch (err) {
+      document.body.innerHTML =
+        "<div style='padding:12px;color:red;font-family:system-ui'>ERROR loading calendar</div>";
+    }
+  })();
+</script>
+
 </body>
 </html>`;
 
