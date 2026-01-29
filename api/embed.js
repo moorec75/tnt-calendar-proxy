@@ -144,8 +144,9 @@ module.exports = async (req, res) => {
       bottom: 0;
       background: rgba(0,0,0,0.5);
       z-index: 1000;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      padding-top: 60px;
     }
     #day-popup-overlay.visible {
       display: flex;
