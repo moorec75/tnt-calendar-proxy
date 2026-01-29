@@ -134,6 +134,78 @@ module.exports = async (req, res) => {
       background-color: #FFEBFF !important;
     }
 
+    /* Day popup */
+    #day-popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    #day-popup-overlay.visible {
+      display: flex;
+    }
+    #day-popup {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      max-width: 90%;
+      width: 320px;
+      max-height: 80%;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    #day-popup-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #080808;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    .popup-event {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .popup-event.ed {
+      background-color: #FFADFF;
+      border: 1px solid #e08be0;
+      color: #4B0D3A;
+    }
+    .popup-event.ip {
+      background-color: #AFACFB;
+      border: 1px solid #8E8AE6;
+      color: #4B0D3A;
+    }
+    .popup-event.other {
+      background-color: #D11A2A;
+      border: 1px solid #B01522;
+      color: #fff;
+    }
+    .popup-no-events {
+      color: #666;
+      font-style: italic;
+    }
+    #day-popup-close {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 10px;
+      background: #48B0D3;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
     /* Mobile responsive */
     @media (max-width: 500px) {
       #header-section {
@@ -184,6 +256,13 @@ module.exports = async (req, res) => {
   </style>
 </head>
 <body>
+  <div id="day-popup-overlay">
+    <div id="day-popup">
+      <div id="day-popup-title"></div>
+      <div id="day-popup-events"></div>
+      <button id="day-popup-close">Close</button>
+    </div>
+  </div>
   <div id="page-container">
     <div id="header-section">
       <div class="custom-toolbar">
@@ -276,6 +355,70 @@ module.exports = async (req, res) => {
         document.getElementById('btn-today').addEventListener('click', function() {
           calendar.today();
         });
+
+        // Long press popup for mobile
+        const popupOverlay = document.getElementById('day-popup-overlay');
+        const popupTitle = document.getElementById('day-popup-title');
+        const popupEvents = document.getElementById('day-popup-events');
+        const popupClose = document.getElementById('day-popup-close');
+        let longPressTimer = null;
+        let longPressDate = null;
+
+        function showDayPopup(dateStr) {
+          const date = new Date(dateStr + 'T00:00:00');
+          const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+          popupTitle.textContent = date.toLocaleDateString('en-US', options);
+
+          const dayEvents = calendar.getEvents().filter(e => {
+            const eStart = e.startStr.slice(0, 10);
+            const eEnd = e.endStr ? e.endStr.slice(0, 10) : eStart;
+            return dateStr >= eStart && dateStr < eEnd;
+          });
+
+          if (dayEvents.length === 0) {
+            popupEvents.innerHTML = '<div class="popup-no-events">No events this day</div>';
+          } else {
+            popupEvents.innerHTML = dayEvents.map(e => {
+              const bucket = e.classNames.find(c => ['ed', 'ip', 'other'].includes(c)) || 'ed';
+              return '<div class="popup-event ' + bucket + '">' + (e.title || 'Untitled') + '</div>';
+            }).join('');
+          }
+
+          popupOverlay.classList.add('visible');
+        }
+
+        function hidePopup() {
+          popupOverlay.classList.remove('visible');
+        }
+
+        popupClose.addEventListener('click', hidePopup);
+        popupOverlay.addEventListener('click', function(e) {
+          if (e.target === popupOverlay) hidePopup();
+        });
+
+        // Attach long press to day cells
+        document.addEventListener('touchstart', function(e) {
+          const dayCell = e.target.closest('.fc-daygrid-day');
+          if (!dayCell) return;
+
+          longPressDate = dayCell.getAttribute('data-date');
+          longPressTimer = setTimeout(function() {
+            if (longPressDate) {
+              showDayPopup(longPressDate);
+            }
+          }, 500);
+        }, { passive: true });
+
+        document.addEventListener('touchend', function() {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        });
+
+        document.addEventListener('touchmove', function() {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }, { passive: true });
+
       } catch (err) {
         document.body.innerHTML =
           "<div style='padding:12px;color:red;font-family:system-ui'>ERROR loading calendar</div>";
