@@ -93,10 +93,12 @@ module.exports = async (req, res) => {
       background-color: #FFADFF !important;
       border: 1px solid #e08be0 !important;
       border-radius: 4px;
-      padding: 2px 4px;
+      padding: 4px 6px;
       font-weight: 500;
       cursor: default;
       font-size: 11px;
+      min-height: 32px;
+      line-height: 1.4;
     }
     .fc-daygrid-event .fc-event-title {
       color: #4B0D3A !important;
@@ -158,8 +160,9 @@ module.exports = async (req, res) => {
       }
       .fc-daygrid-event {
         font-size: 9px;
-        padding: 1px 2px;
-        line-height: 1.2;
+        padding: 3px 4px;
+        line-height: 1.3;
+        min-height: 26px;
       }
       .fc-daygrid-day-number {
         font-size: 0.7rem;
