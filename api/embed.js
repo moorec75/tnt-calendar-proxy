@@ -55,6 +55,7 @@ module.exports = async (req, res) => {
       font-weight: 600;
       color: #080808;
       text-align: center;
+      margin-top: -4px;
     }
     .toolbar-right {
       display: flex;
@@ -190,7 +191,6 @@ module.exports = async (req, res) => {
           <button class="toolbar-btn" id="btn-today">today</button>
         </div>
       </div>
-      <div class="calendar-subtitle">TNT Schedule</div>
     </div>
     <div id="calendar-scroll">
       <div id="calendar"></div>
