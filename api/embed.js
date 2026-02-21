@@ -34,8 +34,7 @@ module.exports = async (req, res) => {
     }
     #calendar-scroll {
       flex: 1 1 auto;
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: hidden;
       padding: 0 8px 8px 8px;
       min-height: 0;
     }
@@ -56,6 +55,13 @@ module.exports = async (req, res) => {
       color: #080808;
       text-align: center;
       margin-top: -4px;
+      line-height: 1.1;
+    }
+    .toolbar-subtitle {
+      font-size: 0.65rem;
+      font-weight: 500;
+      color: #666;
+      margin-top: -2px;
     }
     .toolbar-right {
       display: flex;
@@ -76,14 +82,6 @@ module.exports = async (req, res) => {
     .toolbar-btn:hover {
       background-color: #3a9bc0;
       border-color: #3a9bc0;
-    }
-    .calendar-subtitle {
-      text-align: center;
-      margin: 0;
-      padding: 2px 0;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #666;
     }
     /* Hide FullCalendar's built-in toolbar */
     .fc .fc-toolbar { display: none !important; }
@@ -223,11 +221,12 @@ module.exports = async (req, res) => {
       .toolbar-center {
         font-size: 0.9rem;
       }
+      .toolbar-subtitle {
+        font-size: 0.55rem;
+        margin-top: -1px;
+      }
       .toolbar-left {
         gap: 2px;
-      }
-      .calendar-subtitle {
-        font-size: 0.65rem;
       }
       .fc-daygrid-event {
         font-size: 9px;
@@ -271,7 +270,10 @@ module.exports = async (req, res) => {
           <button class="toolbar-btn" id="btn-prev">&lt;</button>
           <button class="toolbar-btn" id="btn-next">&gt;</button>
         </div>
-        <div class="toolbar-center" id="toolbar-title"></div>
+        <div class="toolbar-center">
+          <div id="toolbar-title"></div>
+          <div class="toolbar-subtitle">TNT Schedule</div>
+        </div>
         <div class="toolbar-right">
           <button class="toolbar-btn" id="btn-today">today</button>
         </div>
